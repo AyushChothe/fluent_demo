@@ -1,17 +1,23 @@
 import 'dart:math' as math;
+import 'dart:ui';
+import 'package:fluent_demo/partImage.dart';
 import 'package:flutter/material.dart';
 
 class TileData {
   String body;
   Offset offset, initOffset;
+  Rect imageRect;
+
   bool isBlank;
   Size size;
+
   Key? key;
 
   TileData copyWith({
     String? body,
     Offset? offset,
     Offset? initOffset,
+    Rect? imageRect,
     bool? isBlank,
     Size? size,
     Key? key,
@@ -20,6 +26,7 @@ class TileData {
         body: body ?? this.body,
         offset: offset ?? this.offset,
         initOffset: initOffset ?? this.initOffset,
+        imageRect: imageRect ?? this.imageRect,
         isBlank: isBlank ?? this.isBlank,
         size: size ?? this.size,
         key: key ?? this.key,
@@ -29,6 +36,7 @@ class TileData {
     required this.body,
     required this.offset,
     required this.initOffset,
+    required this.imageRect,
     required this.size,
     this.isBlank = false,
     this.key,
@@ -37,9 +45,12 @@ class TileData {
 
 class TileWidget extends StatelessWidget {
   final TileData tileData;
+  final ImageProvider? imageProvider;
   final void Function()? onTap;
+
   const TileWidget({
     Key? key,
+    this.imageProvider,
     required this.tileData,
     this.onTap,
   }) : super(key: key);
@@ -58,26 +69,52 @@ class TileWidget extends StatelessWidget {
           ? const SizedBox.expand()
           : GestureDetector(
               onTap: onTap,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 500),
-                margin: const EdgeInsets.all(2.0),
-                height: double.infinity,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: tileData.initOffset == tileData.offset
-                      ? Colors.blue[700]
-                      : Colors.lightBlue,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: Text(
-                      tileData.body,
-                      style: const TextStyle(fontSize: 50),
+              child: Stack(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    margin: const EdgeInsets.all(2.0),
+                    height: double.infinity,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: tileData.initOffset == tileData.offset
+                          ? Colors.blue[700]
+                          : Colors.lightBlue,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Text(
+                          tileData.body,
+                          style: const TextStyle(fontSize: 50),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (imageProvider != null)
+                    Positioned.fill(
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 500),
+                        margin: const EdgeInsets.all(1.0),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: ImageFiltered(
+                            imageFilter: tileData.initOffset == tileData.offset
+                                ? ImageFilter.blur()
+                                : ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                            child: PartImagePainter(
+                              imageProvider: imageProvider!,
+                              rect: tileData.imageRect,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
     );
@@ -88,11 +125,13 @@ class PuzzleScreen extends StatefulWidget {
   const PuzzleScreen({
     Key? key,
     this.size = 4,
+    this.imageProvider,
     required this.puzzleSize,
   }) : super(key: key);
 
   final int size;
   final Size puzzleSize;
+  final ImageProvider? imageProvider;
 
   @override
   _PuzzleScreenState createState() => _PuzzleScreenState();
@@ -100,7 +139,7 @@ class PuzzleScreen extends StatefulWidget {
 
 class _PuzzleScreenState extends State<PuzzleScreen> {
   late List<TileData> tiles;
-  late final Size tileSize;
+  late Size tileSize;
   late bool solved;
   late int moves;
 
@@ -129,20 +168,30 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     solved = true;
     tiles = List.generate(
       widget.size * widget.size,
-      (i) => TileData(
-        key: ValueKey(i),
-        size: tileSize,
-        body: "${i + 1}",
-        initOffset: Offset(
-          i ~/ widget.size * tileSize.width,
-          (i % widget.size) * tileSize.height,
-        ),
-        offset: Offset(
-          i ~/ widget.size * tileSize.width,
-          (i % widget.size) * tileSize.height,
-        ),
-        isBlank: (i) == (widget.size * widget.size - 1),
-      ),
+      (i) {
+        // print((i % widget.size).toInt() / widget.size);
+        final row = i ~/ widget.size,
+            col = (i % widget.size),
+            _dx = row * tileSize.width,
+            _dy = col * tileSize.height,
+            imgL = col / widget.size,
+            imgT = row / widget.size;
+
+        return TileData(
+          key: ValueKey(i),
+          size: tileSize,
+          body: "${i + 1}",
+          initOffset: Offset(_dx, _dy),
+          offset: Offset(_dx, _dy),
+          imageRect: Rect.fromLTRB(
+            imgL,
+            imgT,
+            imgL + (1 / widget.size),
+            imgT + (1 / widget.size),
+          ),
+          isBlank: (i) == (widget.size * widget.size - 1),
+        );
+      },
     );
   }
 
@@ -190,9 +239,18 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const FlutterLogo(
-              size: 150,
-            ),
+            widget.imageProvider == null
+                ? const FlutterLogo(
+                    size: 150,
+                  )
+                : SizedBox(
+                    height: 200,
+                    width: 200,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(5),
+                      child: Image(image: widget.imageProvider!),
+                    ),
+                  ),
             Text(
               "$moves Moves",
               style: const TextStyle(fontSize: 40),
@@ -216,6 +274,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                           key: t.key,
                           tileData: t,
                           onTap: () => move(t),
+                          imageProvider: widget.imageProvider,
                         ),
                       )
                       .toList(),

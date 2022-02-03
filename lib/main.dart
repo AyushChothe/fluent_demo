@@ -32,6 +32,26 @@ class _HomePageState extends State<HomePage> {
     return const PuzzleScreen(
       puzzleSize: Size(500, 500),
       size: 3,
+      imageProvider: AssetImage("assets/5.jpg"),
     );
+
+    // imageProvider: NetworkImage(
+    //     "http://www.wonderplanets.de/Mond/2006/Mosaik_110906_half.jpg"),
+
+    // return Scaffold(
+    //   appBar: AppBar(
+    //     title: const Text("Image Crop Example"),
+    //   ),
+    //   body: const AspectRatio(
+    //     aspectRatio: 1,
+    //     child: SizedBox.expand(
+    //       child: PartImagePainter(
+    //         imageUrl:
+    //             "https://raw.githubusercontent.com/VGVentures/slide_puzzle/release/assets/images/dashatar/gallery/blue.png",
+    //         rect: Rect.fromLTRB(0.2, 0.2, 0.75, 0.75),
+    //       ),
+    //     ),
+    //   ),
+    // );
   }
 }
