@@ -59,39 +59,19 @@ class TileWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedPositioned.fromRect(
       rect: Rect.fromLTRB(
-        tileData.offset.dy,
         tileData.offset.dx,
-        tileData.offset.dy + tileData.size.width,
+        tileData.offset.dy,
         tileData.offset.dx + tileData.size.height,
+        tileData.offset.dy + tileData.size.width,
       ),
       duration: const Duration(milliseconds: 500),
+      curve: Curves.fastOutSlowIn,
       child: tileData.isBlank
           ? const SizedBox.expand()
           : GestureDetector(
               onTap: onTap,
               child: Stack(
                 children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 500),
-                    margin: const EdgeInsets.all(2.0),
-                    height: double.infinity,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: tileData.initOffset == tileData.offset
-                          ? Colors.blue[700]
-                          : Colors.lightBlue,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: Text(
-                          tileData.body,
-                          style: const TextStyle(fontSize: 50),
-                        ),
-                      ),
-                    ),
-                  ),
                   if (imageProvider != null)
                     Positioned.fill(
                       child: AnimatedContainer(
@@ -105,7 +85,7 @@ class TileWidget extends StatelessWidget {
                           child: ImageFiltered(
                             imageFilter: tileData.initOffset == tileData.offset
                                 ? ImageFilter.blur()
-                                : ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+                                : ImageFilter.blur(sigmaX: 1, sigmaY: 1),
                             child: PartImagePainter(
                               imageProvider: imageProvider!,
                               rect: tileData.imageRect,
@@ -114,6 +94,34 @@ class TileWidget extends StatelessWidget {
                         ),
                       ),
                     ),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    margin: const EdgeInsets.all(2.0),
+                    height: double.infinity,
+                    width: double.infinity,
+                    decoration: imageProvider != null
+                        ? null
+                        : BoxDecoration(
+                            color: tileData.initOffset == tileData.offset
+                                ? Colors.blue[700]
+                                : Colors.lightBlue,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                    child: Center(
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        child: Text(
+                          tileData.body,
+                          style: TextStyle(
+                              fontSize: 50,
+                              color: Colors.white.withOpacity(
+                                  tileData.initOffset == tileData.offset
+                                      ? 0.0
+                                      : 0.5)),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -154,11 +162,7 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
 
   bool checkSolved() {
     for (int i = 0; i < tiles.length; i++) {
-      if (tiles[i].offset !=
-          Offset(
-            i ~/ widget.size * tileSize.width,
-            (i % widget.size) * tileSize.height,
-          )) return false;
+      if (tiles[i].offset != tiles[i].initOffset) return false;
     }
     return true;
   }
@@ -169,11 +173,10 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     tiles = List.generate(
       widget.size * widget.size,
       (i) {
-        // print((i % widget.size).toInt() / widget.size);
-        final row = i ~/ widget.size,
-            col = (i % widget.size),
-            _dx = row * tileSize.width,
-            _dy = col * tileSize.height,
+        final col = i ~/ widget.size,
+            row = (i % widget.size),
+            _dx = col * tileSize.width,
+            _dy = row * tileSize.height,
             imgL = col / widget.size,
             imgT = row / widget.size;
 
@@ -195,7 +198,17 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
     );
   }
 
-  void shuffle() {
+  void shuffle() async {
+    // setState(() {
+    //   for (TileData t in tiles) {
+    //     t.offset = Offset(10, (widget.puzzleSize.height - tileSize.height) / 2);
+    //   }
+    // });
+
+    // await Future.delayed(const Duration(seconds: 1));
+
+    // reset();
+
     setState(() {
       for (int i = 0; i < tiles.length * 10; i++) {
         TileData t1 = tiles[math.Random().nextInt(tiles.length)],
@@ -203,8 +216,8 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
         move(t1);
         move(t2);
       }
-      moves = 0;
     });
+    moves = 0;
   }
 
   void move(TileData tile) {

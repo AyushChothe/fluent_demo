@@ -31,8 +31,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return const PuzzleScreen(
       puzzleSize: Size(500, 500),
-      size: 3,
-      imageProvider: AssetImage("assets/5.jpg"),
+      size: 4,
+      imageProvider: AssetImage("assets/7.gif"),
+      // imageProvider: NetworkImage(
+      //     "https://pro2-bar-s3-cdn-cf1.myportfolio.com/eea16061-59a8-442a-9b65-0c684f52f904/2b4d7379-b5a1-4aa1-a8fc-768150f862a3_car_1x1.gif?h=8d4018e753547e55e5b67b73ef443099"),
     );
 
     // imageProvider: NetworkImage(

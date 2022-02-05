@@ -15,31 +15,39 @@ class PartImagePainter extends StatefulWidget {
 }
 
 class _PartImagePainterState extends State<PartImagePainter> {
-  ui.Image? _image;
+  // ui.Image? _image;
 
-  Future<ui.Image> getImage(ImageProvider _provider) async {
-    Completer<ImageInfo> completer = Completer();
-    // var img = NetworkImage(path);
-    var img = _provider;
-    img
-        .resolve(const ImageConfiguration())
-        .addListener(ImageStreamListener((ImageInfo info, bool _) {
-      completer.complete(info);
-    }));
-    ImageInfo imageInfo = await completer.future;
-    return imageInfo.image;
-  }
+  // Future<ui.Image> getImage(ImageProvider _provider) async {
+  //   Completer<ImageInfo> completer = Completer();
+  //   // var img = NetworkImage(path);
+  //   var img = _provider;
+  //   img
+  //       .resolve(const ImageConfiguration())
+  //       .addListener(ImageStreamListener((ImageInfo info, bool _) {
+  //     completer.complete(info);
+  //   }));
+  //   ImageInfo imageInfo = await completer.future;
+  //   return imageInfo.image;
+  // }
+
+  StreamController<ui.Image> gifCtrl = StreamController();
+  // var img = NetworkImage(path);
 
   @override
   void initState() {
     super.initState();
-    getImage(widget.imageProvider).then(
-      (_img) => setState(
-        () {
-          _image = _img;
-        },
-      ),
-    );
+    widget.imageProvider
+        .resolve(const ImageConfiguration())
+        .addListener(ImageStreamListener((ImageInfo info, bool _) {
+      gifCtrl.sink.add(info.image);
+    }));
+    // getImage(widget.imageProvider).then(
+    //   (_img) => setState(
+    //     () {
+    //       _image = _img;
+    //     },
+    //   ),
+    // );
   }
 
   @override
@@ -55,9 +63,22 @@ class _PartImagePainterState extends State<PartImagePainter> {
     //         return const Center(child: CircularProgressIndicator());
     //       }
     //     });
-    return _image != null
-        ? paintImage(_image)
-        : const Center(child: CircularProgressIndicator());
+
+    print("Gif");
+    return StreamBuilder(
+        stream: gifCtrl.stream,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            // If the Future is complete, display the preview.
+            return paintImage(snapshot.data);
+          } else {
+            // Otherwise, display a loading indicator.
+            return const Center(child: CircularProgressIndicator());
+          }
+        });
+    // return _image != null
+    //     ? paintImage(_image)
+    //     : const Center(child: CircularProgressIndicator());
   }
 
   paintImage(image) {
