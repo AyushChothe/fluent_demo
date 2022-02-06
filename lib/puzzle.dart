@@ -1,133 +1,7 @@
 import 'dart:math' as math;
-import 'dart:ui';
-import 'package:fluent_demo/partImage.dart';
+import 'package:fluent_demo/models/tile_data.dart';
+import 'package:fluent_demo/widgets/tile_widget.dart';
 import 'package:flutter/material.dart';
-
-class TileData {
-  String body;
-  Offset offset, initOffset;
-  Rect imageRect;
-
-  bool isBlank;
-  Size size;
-
-  Key? key;
-
-  TileData copyWith({
-    String? body,
-    Offset? offset,
-    Offset? initOffset,
-    Rect? imageRect,
-    bool? isBlank,
-    Size? size,
-    Key? key,
-  }) =>
-      TileData(
-        body: body ?? this.body,
-        offset: offset ?? this.offset,
-        initOffset: initOffset ?? this.initOffset,
-        imageRect: imageRect ?? this.imageRect,
-        isBlank: isBlank ?? this.isBlank,
-        size: size ?? this.size,
-        key: key ?? this.key,
-      );
-
-  TileData({
-    required this.body,
-    required this.offset,
-    required this.initOffset,
-    required this.imageRect,
-    required this.size,
-    this.isBlank = false,
-    this.key,
-  });
-}
-
-class TileWidget extends StatelessWidget {
-  final TileData tileData;
-  final ImageProvider? imageProvider;
-  final void Function()? onTap;
-
-  const TileWidget({
-    Key? key,
-    this.imageProvider,
-    required this.tileData,
-    this.onTap,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedPositioned.fromRect(
-      rect: Rect.fromLTRB(
-        tileData.offset.dx,
-        tileData.offset.dy,
-        tileData.offset.dx + tileData.size.height,
-        tileData.offset.dy + tileData.size.width,
-      ),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.fastOutSlowIn,
-      child: tileData.isBlank
-          ? const SizedBox.expand()
-          : GestureDetector(
-              onTap: onTap,
-              child: Stack(
-                children: [
-                  if (imageProvider != null)
-                    Positioned.fill(
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 500),
-                        margin: const EdgeInsets.all(1.0),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: ImageFiltered(
-                            imageFilter: tileData.initOffset == tileData.offset
-                                ? ImageFilter.blur()
-                                : ImageFilter.blur(sigmaX: 1, sigmaY: 1),
-                            child: PartImagePainter(
-                              imageProvider: imageProvider!,
-                              rect: tileData.imageRect,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 500),
-                    margin: const EdgeInsets.all(2.0),
-                    height: double.infinity,
-                    width: double.infinity,
-                    decoration: imageProvider != null
-                        ? null
-                        : BoxDecoration(
-                            color: tileData.initOffset == tileData.offset
-                                ? Colors.blue[700]
-                                : Colors.lightBlue,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                    child: Center(
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: Text(
-                          tileData.body,
-                          style: TextStyle(
-                              fontSize: 50,
-                              color: Colors.white.withOpacity(
-                                  tileData.initOffset == tileData.offset
-                                      ? 0.0
-                                      : 0.5)),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-}
 
 class PuzzleScreen extends StatefulWidget {
   const PuzzleScreen({
@@ -285,9 +159,9 @@ class _PuzzleScreenState extends State<PuzzleScreen> {
                       .map(
                         (t) => TileWidget(
                           key: t.key,
-                          tileData: t,
-                          onTap: () => move(t),
-                          imageProvider: widget.imageProvider,
+                          // tileData: t,
+                          // onTap: () => move(t),
+                          // imageProvider: widget.imageProvider,
                         ),
                       )
                       .toList(),
